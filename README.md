@@ -17,6 +17,12 @@ For an example of a compatible metric server, see the sister repository to this 
 
 
 ## Installation and upload
+### Install required dependencies
+
+```bash
+pio lib install DallasTemperature
+```
+
 ### Setting runtime values
 
 Before building, the PLATFORMIO\_BUILD\_FLAGS environment variable needs to be set correctly to set the SSID, wifi password etc. For an example of how to do this, see the file setbuildvars.example.sh.
