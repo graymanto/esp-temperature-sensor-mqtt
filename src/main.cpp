@@ -29,7 +29,7 @@ DallasTemperature sensors(&oneWire);
 float Celcius = 0;
 float Fahrenheit = 0;
 
-void setup(void) {
+void setup() {
   pinMode(ONE_WIRE_BUS, INPUT_PULLUP);
   Serial.begin(9600);
   sensors.begin();
@@ -42,18 +42,18 @@ void setup(void) {
   Serial.println("\nConnecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
     if (millis() - startTime >= TIMEOUT) {
-      ESP.deepSleep(120e6);
+      ESP.deepSleep(SLEEP_TIME);
     }
 
     Serial.print(".");
     delay(1000);
   }
 
-  configTime(0, 0, "192.168.11.18", "pool.ntp.org");
+  configTime(0, 0, TIME_SERVER, "pool.ntp.org", "time.nist.gov");
   Serial.println("\nWaiting for time");
   while (!time(nullptr)) {
     if (millis() - startTime >= TIMEOUT) {
-      ESP.deepSleep(120e6);
+      ESP.deepSleep(SLEEP_TIME);
     }
     Serial.print(".");
     delay(1000);
@@ -61,7 +61,7 @@ void setup(void) {
   Serial.println("");
 }
 
-void loop(void) {
+void loop() {
   sensors.requestTemperatures();
   Celcius = sensors.getTempCByIndex(0);
   Serial.print(" C  ");
@@ -84,5 +84,5 @@ void loop(void) {
   Serial.println(message);
 
   Serial.println("Going to sleep");
-  ESP.deepSleep(120e6);
+  ESP.deepSleep(SLEEP_TIME);
 }
