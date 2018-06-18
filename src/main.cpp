@@ -17,7 +17,11 @@
 
 #define SENSOR_METRIC_BASENAME "temperature"
 #define METRIC_NAME_SEP "."
-#define METRIC_NAME SENSOR_METRIC_BASENAME METRIC_NAME_SEP SENSOR_NUMBER
+#define UNUSED_INDEXES ".0.0"
+#define METRIC_NAME                                                            \
+  SENSOR_METRIC_BASENAME METRIC_NAME_SEP SENSOR_NUMBER UNUSED_INDEXES
+
+static const unsigned long TIMEOUT = 80000; // ms
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
@@ -30,18 +34,27 @@ void setup(void) {
   Serial.begin(9600);
   sensors.begin();
 
+  auto startTime = millis();
+
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
 
   Serial.println("\nConnecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
+    if (millis() - startTime >= TIMEOUT) {
+      ESP.deepSleep(120e6);
+    }
+
     Serial.print(".");
     delay(1000);
   }
 
-  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  configTime(0, 0, "192.168.11.18", "pool.ntp.org");
   Serial.println("\nWaiting for time");
   while (!time(nullptr)) {
+    if (millis() - startTime >= TIMEOUT) {
+      ESP.deepSleep(120e6);
+    }
     Serial.print(".");
     delay(1000);
   }
