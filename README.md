@@ -11,9 +11,7 @@ It also assumes the board is setup to allow deep sleep.
  
 ## What does it do
 
-The board should wake from deep sleep every 2 minutes, read the temperature and current time then make an http post in [graphite](https://graphite.readthedocs.io/en/latest/feeding-carbon.html) string format to a compatible metric server.
-
-For an example of a compatible metric server, see the sister repository to this one [here](https://github.com/graymanto/smarthome-data).
+The board should wake from deep sleep every 2 minutes (or whatever length is configured), read the temperature and current time then make To an MQTT server.
 
 
 ## Installation and upload
@@ -25,7 +23,7 @@ pio lib install DallasTemperature
 
 ### Setting runtime values
 
-Before building, the PLATFORMIO\_BUILD\_FLAGS environment variable needs to be set correctly to set the SSID, wifi password etc. For an example of how to do this, see the file setbuildvars.example.sh.
+Before building, the PLATFORMIO\_BUILD\_FLAGS environment variables needs to be set correctly to set the SSID, wifi password, sleep time etc. For an example of how to do this, see the file setbuildvars.example.sh.
 
 The easiest approach is to copy this file to setbuildvars.sh, set the values in the file as appropriate then run
 
