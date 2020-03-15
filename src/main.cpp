@@ -2,6 +2,7 @@
 #include <DallasTemperature.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WiFi.h>
+#include <MQTT.h>
 #include <OneWire.h>
 #include <stdio.h>
 #include <time.h>
@@ -15,19 +16,18 @@
 #define ONE_WIRE_BUS D4
 #endif
 
-#define SENSOR_METRIC_BASENAME "temperature"
-#define METRIC_NAME_SEP "."
-#define UNUSED_INDEXES ".0.0"
-#define METRIC_NAME                                                            \
-  SENSOR_METRIC_BASENAME METRIC_NAME_SEP SENSOR_NUMBER UNUSED_INDEXES
-
-static const unsigned long TIMEOUT = 80000; // ms
+static const unsigned long TIMEOUT = 15000; // ms
+static const bool RETAINED = true;
+static const bool QOS = 2;
 
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 float Celcius = 0;
 float Fahrenheit = 0;
+
+WiFiClient net;
+MQTTClient client;
 
 void setup() {
   pinMode(ONE_WIRE_BUS, INPUT_PULLUP);
@@ -42,7 +42,9 @@ void setup() {
   Serial.println("\nConnecting to WiFi");
   while (WiFi.status() != WL_CONNECTED) {
     if (millis() - startTime >= TIMEOUT) {
+      Serial.println("\nFailed to connect. Sleeping.");
       ESP.deepSleep(SLEEP_TIME);
+      return;
     }
 
     Serial.print(".");
@@ -53,11 +55,27 @@ void setup() {
   Serial.println("\nWaiting for time");
   while (!time(nullptr)) {
     if (millis() - startTime >= TIMEOUT) {
+      Serial.println("\nFailed to get time. Sleeping.");
       ESP.deepSleep(SLEEP_TIME);
+      return;
     }
     Serial.print(".");
     delay(1000);
   }
+
+  Serial.print("\nConnecting to broker " + String(BROKER));
+  client.begin(BROKER, net);
+
+  while (!client.connect("arduino")) {
+    if (millis() - startTime >= TIMEOUT) {
+      Serial.println("\nFailed to connect to broker. Sleeping.");
+      ESP.deepSleep(SLEEP_TIME);
+      return;
+    }
+    Serial.print(".");
+    delay(1000);
+  }
+
   Serial.println("");
 }
 
@@ -70,19 +88,13 @@ void loop() {
   time_t now = time(nullptr);
   Serial.println(ctime(&now));
 
-  HTTPClient http;
-  http.begin(POST_URL);
-  http.addHeader("Content-Type", "text/plain");
-
   String metricValue =
-      String(METRIC_NAME) + " " + String(Celcius) + " " + String(now);
+      "{ \"temp\": " + String(Celcius) + ", \"time\": " + String(now) + "}";
   Serial.println("Posting" + metricValue);
-  auto httpCode = http.POST(metricValue);
-  http.end();
 
-  auto message = String("Http response was ") + httpCode;
-  Serial.println(message);
+  client.publish(TOPIC, metricValue, RETAINED, QOS);
 
+  Serial.println("Published.");
   Serial.println("Going to sleep");
   ESP.deepSleep(SLEEP_TIME);
 }
