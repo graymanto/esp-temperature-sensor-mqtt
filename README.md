@@ -11,7 +11,7 @@ It also assumes the board is setup to allow deep sleep.
  
 ## What does it do
 
-The board should wake from deep sleep every 2 minutes (or whatever length is configured), read the temperature and current time then make To an MQTT server.
+The board should wake from deep sleep every 2 minutes (or whatever length is configured), read the temperature and current time then post to an MQTT server.
 
 
 ## Installation and upload
